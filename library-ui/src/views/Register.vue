@@ -51,7 +51,7 @@
         <el-button type="primary" style="width: 100%" @click="register">注 册</el-button>
       </el-form-item>
       <el-form-item>
-        <el-button type="text" @click="$router.push('/login')">前往登录 >></el-button>
+        <a href="javascript:void(0)" class="link-button" @click="$router.push('/login')">前往登录 >></a>
       </el-form-item>
     </el-form>
   </div>
@@ -128,18 +128,104 @@ const register = async () => {
 
 <style scoped>
 .login-container {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  background-size: contain;
+  min-height: 100vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInBg 0.8s ease-out;
+}
+@keyframes fadeInBg {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .login-page {
-  border-radius: 5px;
-  margin: 180px auto;
-  width: 350px;
-  padding: 35px 35px 15px;
-  background: #fff;
-  border: 1px solid #eaeaea;
-  box-shadow: 0 0 25px #cac6c6;
+  border-radius: 18px;
+  width: 370px;
+  padding: 40px 38px 20px;
+  background: rgba(255,255,255,0.95);
+  border: none;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.3s cubic-bezier(.25,.8,.25,1), box-shadow 0.3s;
+  animation: fadeIn 0.8s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.login-page:hover {
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 16px 40px 0 rgba(31, 38, 135, 0.22);
+}
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 10px;
+  letter-spacing: 2px;
+  text-align: center;
+  animation: fadeIn 0.8s ease-out;
+}
+@keyframes fadeInTitle {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.el-form-item {
+  width: 100%;
+}
+.el-input, .el-radio-group, .el-button {
+  border-radius: 12px !important;
+}
+.el-input__wrapper {
+  background: #f7f8fa;
+  border-radius: 12px !important;
+  transition: box-shadow 0.2s;
+}
+.el-input__wrapper:focus-within {
+  box-shadow: 0 0 0 2px #fed6e3;
+}
+.el-button {
+  background: #a8edea;
+  border: none;
+  color: #333;
+  font-weight: normal;
+  border-radius: 12px;
+  transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+  box-shadow: 0 2px 8px rgba(168,237,234,0.15);
+}
+.el-button:hover {
+  background: #fed6e3;
+  color: #222;
+  transform: translateY(-2px) scale(1.03);
+}
+.el-form-item__content {
+  display: flex;
+  align-items: center;
+}
+@media (max-width: 500px) {
+  .login-page {
+    width: 95vw;
+    padding: 20px 5vw 10px;
+    margin: 0;
+  }
+}
+.link-button {
+  color: #409EFF;
+  text-decoration: none;
+  font-size: 14px;
+  transition: color 0.3s;
+  cursor: pointer;
+  display: inline-block;
+  padding: 4px 0;
+}
+.link-button:hover {
+  color: #66b1ff;
+  text-decoration: underline;
 }
 </style>
