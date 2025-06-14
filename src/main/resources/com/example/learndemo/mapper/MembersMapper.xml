@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.learndemo.mapper.MembersMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.learndemo.domain.Members">
+            <id property="memberId" column="member_id" />
+            <result property="userId" column="user_id" />
+            <result property="maxBooks" column="max_books" />
+            <result property="freeDays" column="free_days" />
+            <result property="deposit" column="deposit" />
+            <result property="rentPay" column="rent_pay" />
+            <result property="overdueFine" column="overdue_fine" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        member_id,user_id,max_books,free_days,deposit,rent_pay,
+        overdue_fine
+    </sql>
+    <select id="findOneByUserid" resultType="com.example.learndemo.domain.User"></select>
+</mapper>

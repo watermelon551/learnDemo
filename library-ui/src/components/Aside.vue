@@ -51,6 +51,13 @@
         </template>
       </el-menu-item>
 
+      <el-menu-item index="/financial" v-if="user.role === 'ADMIN'" class="menu-item">
+        <el-icon><Money /></el-icon>
+        <template #title>
+        <span>财务管理</span>
+        </template>
+      </el-menu-item>
+
       <el-sub-menu index="profile" class="menu-item">
         <template #title>
           <el-icon><UserFilled /></el-icon>
@@ -82,7 +89,8 @@ import {
   Grid,
   UserFilled,
   Edit,
-  Lock
+  Lock,
+  Money
 } from '@element-plus/icons-vue';
 
 const user = ref({});

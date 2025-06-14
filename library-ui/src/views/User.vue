@@ -63,7 +63,7 @@
         <el-table-column prop="phone" label="电话号码" min-width="150" />
         <el-table-column prop="role" label="角色" min-width="100">
           <template #default="{ row }">
-            <el-tag :type="row.role === 'ADMIN' ? 'danger' : 'success'">
+            <el-tag :type="row.role === 'ADMIN' ? 'danger' : 'success'" disable-transitions>
               {{ row.role === 'ADMIN' ? '管理员' : '普通用户' }}
             </el-tag>
         </template>

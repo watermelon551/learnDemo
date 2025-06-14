@@ -4,7 +4,7 @@
     <div>
       <!-- 标题和操作栏 -->
       <div class="admin-header">
-        <h2>图书管理系统 - 管理员界面</h2>
+        <h2>智慧图书交互终端 - 管理员界面</h2>
         <button class="logout-btn" @click="logout">退出</button>
       </div>
 

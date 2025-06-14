@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.learndemo.mapper.BookMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.learndemo.domain.Book">
+            <id property="bookId" column="book_id" />
+            <result property="title" column="title" />
+            <result property="author" column="author" />
+            <result property="category" column="category" />
+            <result property="publisher" column="publisher" />
+            <result property="publishYear" column="publish_year" />
+            <result property="isbn" column="isbn" />
+            <result property="totalCopies" column="total_copies" />
+            <result property="availableCopies" column="available_copies" />
+            <result property="status" column="status" />
+            <result property="createdAt" column="created_at" />
+            <result property="updatedAt" column="updated_at" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        book_id,title,author,category,publisher,publish_year,
+        isbn,total_copies,available_copies,status,created_at,
+        updated_at
+    </sql>
+</mapper>
