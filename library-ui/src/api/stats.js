@@ -1,27 +1,36 @@
-import axios from 'axios';
+import request from '@/utils/request.js';
 
-const apiClient = axios.create({
-  baseURL: 'http://localhost:8080/api/stats',
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json'
-  }
-});
-
-export default {
+const statsApi = {
   getTop10Books() {
-    return apiClient.get('/books/top10');  // 使用已定义的apiClient
+    return request({
+      url: '/api/stats/books/top10',
+      method: 'get'
+    });
   },
   getTop10Authors() {
-    return apiClient.get('/authors/top10');  // 使用apiClient代替axios和API_URL
+    return request({
+      url: '/api/stats/authors/top10',
+      method: 'get'
+    });
   },
   getTop10Genres() {
-    return apiClient.get('/genres/top10');
+    return request({
+      url: '/api/stats/genres/top10',
+      method: 'get'
+    });
   },
   getTop10BooksByAuthor(author) {
-    return apiClient.get(`/books/author/${encodeURIComponent(author)}`);
+    return request({
+      url: `/api/stats/books/author/${encodeURIComponent(author)}`,
+      method: 'get'
+    });
   },
   getTop10BooksByGenre(genre) {
-    return apiClient.get(`/books/genre/${encodeURIComponent(genre)}`);
+    return request({
+      url: `/api/stats/books/genre/${encodeURIComponent(genre)}`,
+      method: 'get'
+    });
   }
 };
+
+export default statsApi;

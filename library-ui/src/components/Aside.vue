@@ -78,6 +78,10 @@
           <el-icon><Lock /></el-icon>
           <span>修改密码</span>
         </el-menu-item>
+        <el-menu-item index="/points" class="sub-menu-item">
+          <el-icon><Medal /></el-icon>
+          <span>我的积分</span>
+        </el-menu-item>
       </el-sub-menu>
     </el-menu>
   </div>
@@ -97,7 +101,8 @@ import {
   UserFilled,
   Edit,
   Lock,
-  Money
+  Money,
+  Medal
 } from '@element-plus/icons-vue';
 
 const user = ref({});
