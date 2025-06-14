@@ -43,6 +43,11 @@ const router = createRouter({
           name: 'Financial',
           component: () => import('@/views/Financial.vue'),
           meta: { requiresAdmin: true }
+        },
+        {
+          path: 'stats',
+          name: 'Stats',
+          component: () => import('@/views/Stats.vue')
         }
       ],
       meta: { requiresAuth: true }

@@ -58,6 +58,13 @@
         </template>
       </el-menu-item>
 
+      <el-menu-item index="/stats" class="menu-item">
+        <el-icon><Histogram /></el-icon>
+        <template #title>
+        <span>时下热门</span>
+        </template>
+      </el-menu-item>
+
       <el-sub-menu index="profile" class="menu-item">
         <template #title>
           <el-icon><UserFilled /></el-icon>

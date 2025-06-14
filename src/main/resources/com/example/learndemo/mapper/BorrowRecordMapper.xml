@@ -21,4 +21,57 @@
         id,user_id,book_id,borrow_date,due_date,return_date,
         type,status,created_at,updated_at
     </sql>
+
+    <!-- Top 10 most borrowed books -->
+    <select id="selectTop10Books" resultType="com.example.learndemo.dto.BookStatsDTO">
+      SELECT b.book_id AS bookId, b.title AS bookTitle, b.author, b.category AS genre, COUNT(*) AS borrowCount
+      FROM borrow_record br
+      JOIN book b ON br.book_id = b.book_id
+      GROUP BY b.book_id, b.title, b.author, b.category
+      ORDER BY borrowCount DESC
+      LIMIT 10
+    </select>
+
+    <!-- Top 10 authors -->
+    <select id="selectTop10Authors" resultType="com.example.learndemo.dto.AuthorStatsDTO">
+      SELECT b.author, COUNT(*) AS borrowCount
+      FROM borrow_record br
+      JOIN book b ON br.book_id = b.book_id
+      GROUP BY b.author
+      ORDER BY borrowCount DESC
+      LIMIT 10
+    </select>
+
+    <!-- Top 10 genres -->
+    <select id="selectTop10Genres" resultType="com.example.learndemo.dto.GenreStatsDTO">
+      SELECT b.category AS genre, COUNT(*) AS borrowCount
+      FROM borrow_record br
+      JOIN book b ON br.book_id = b.book_id
+      GROUP BY b.category
+      ORDER BY borrowCount DESC
+      LIMIT 10
+    </select>
+
+    <!-- Top 10 books by author -->
+    <select id="selectTop10BooksByAuthor" resultType="com.example.learndemo.dto.BookStatsDTO">
+      SELECT b.book_id AS bookId, b.title AS bookTitle, b.author, b.category AS genre, COUNT(*) AS borrowCount
+      FROM borrow_record br
+      JOIN book b ON br.book_id = b.book_id
+      WHERE b.author = #{author}
+      GROUP BY b.book_id, b.title, b.author, b.category
+      ORDER BY borrowCount DESC
+      LIMIT 10
+    </select>
+
+    <!-- Top 10 books by genre -->
+    <select id="selectTop10BooksByGenre" resultType="com.example.learndemo.dto.BookStatsDTO">
+      SELECT b.book_id AS bookId, b.title AS bookTitle, b.author, b.category AS genre, COUNT(*) AS borrowCount
+      FROM borrow_record br
+      JOIN book b ON br.book_id = b.book_id
+      WHERE b.category = #{genre}
+      GROUP BY b.book_id, b.title, b.author, b.category
+      ORDER BY borrowCount DESC
+      LIMIT 10
+    </select>
+
 </mapper>
