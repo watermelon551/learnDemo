@@ -3,35 +3,28 @@
     <el-form ref="formRef" :model="form" :rules="rules" class="login-page">
       <h2 class="title" style="margin-bottom: 20px">系统登陆</h2>
       <el-form-item prop="username">
-        <el-input v-model="form.username" clearable>
+        <el-input v-model="form.username" placeholder="请输入用户名" clearable>
           <template #prefix>
             <el-icon class="el-input__icon"><User /></el-icon>
           </template>
         </el-input>
       </el-form-item>
-      <el-form-item prop="password">
-        <el-input v-model="form.password" clearable show-password>
-          <template #prefix>
-            <el-icon class="el-input__icon"><Lock /></el-icon>
-          </template>
-        </el-input>
+      <el-form-item>
+        <el-input
+          v-model="form.password"
+          type="password"
+          placeholder="请输入密码"
+          :prefix-icon="Lock"
+        />
       </el-form-item>
       <el-form-item>
-        <div style="display: flex">
-          <el-input v-model="form.validCode" style="width: 45%;" placeholder="请输入验证码"></el-input>
-          <ValidCode @input="createValidCode" style="width: 50%" />
+        <div class="valid-code">
+          <el-input v-model="form.validCode" placeholder="请输入验证码" style="width: 100%"></el-input>
+          <ValidCode @input="createValidCode" style="width: 120px; margin-left: 12px;"/>
         </div>
       </el-form-item>
       <el-form-item>
-        <div class="mb-2 flex items-center text-sm">
-          <el-radio-group  v-model="form.rule" class="ml-4">
-            <el-radio value="1" size="default">管理员</el-radio>
-            <el-radio value="2" size="default">读者</el-radio>
-          </el-radio-group>
-        </div>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" style="width: 100%" @click="login">登 录</el-button>
+        <el-button type="primary" style="width: 100%" @click="login">登录</el-button>
       </el-form-item>
       <el-form-item style="display: flex; justify-content: space-between;">
         <a href="javascript:void(0)" class="link-button" @click="$router.push('/register')">前往注册 >></a>
@@ -45,7 +38,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus';
 import { User, Lock } from '@element-plus/icons-vue';
@@ -53,13 +46,17 @@ import { useUserStore } from '@/stores/userStore.js';
 import ValidCode from '../components/ValidCode.vue';
 import { loginAPI } from '@/api/auth.js';
 
-const form = ref({
+const router = useRouter();
+const userStore = useUserStore();
+
+const form = reactive({
   username: '',
   password: '',
-  validCode: ''
+  validCode: '',
 });
 
 const validCode = ref('');
+const formRef = ref(null);
 
 const rules = ref({
   username: [
@@ -70,9 +67,6 @@ const rules = ref({
   ]
 });
 
-const router = useRouter();
-const formRef = ref(null);
-
 const createValidCode = (data) => {
   validCode.value = data;
 };
@@ -80,29 +74,48 @@ const createValidCode = (data) => {
 const login = async () => {
   try {
     const valid = await formRef.value.validate();
-    if (valid) {
-      if (!form.value.validCode) {
-        ElMessage.error("请填写验证码");
-        return;
-      }
-      if (form.value.validCode.toLowerCase() !== validCode.value.toLowerCase()) {
-        ElMessage.error("验证码错误");
-        return;
-      }
+    if (!valid) {
+      return;
+    }
 
-      const res = await loginAPI(form.value);
-      if (res.data.code === 200) {
+    if (!form.validCode) {
+      ElMessage.error("请填写验证码");
+      return;
+    }
+    if (form.validCode.toLowerCase() !== validCode.value.toLowerCase()) {
+      ElMessage.error("验证码错误");
+      return;
+    }
+
+    const res = await loginAPI(form);
+    if (res.data.code === 200) {
+      // 保存 token
+      localStorage.setItem('token', res.data.data.token);
+
+      try {
+        // 获取用户信息
+        await userStore.getUserInfo();
+
         ElMessage.success("登录成功");
-        localStorage.setItem('token', res.data.token)
-        await useUserStore().getUserInfo();
-        router.push("/book");
-      } else {
-        ElMessage.error(res.data.message);
+        router.push("/");
+      } catch (error) {
+        console.error('获取用户信息失败:', error);
+        ElMessage.error("获取用户信息失败，请重新登录");
+        localStorage.removeItem('token');
+        userStore.clearUserInfo();
       }
+    } else {
+      ElMessage.error(res.data.message || "登录失败");
     }
   } catch (error) {
-    console.error(error);
-    ElMessage.error("登录失败，请稍后再试");
+    console.error('登录错误:', error);
+    if (error.response) {
+      ElMessage.error(error.response.data?.message || "登录失败，请稍后再试");
+    } else if (error.code === 'ERR_NETWORK') {
+      ElMessage.error("网络连接失败，请检查网络设置");
+    } else {
+      ElMessage.error("登录失败，请稍后再试");
+    }
   }
 };
 
@@ -164,13 +177,123 @@ const login = async () => {
 .el-input, .el-radio-group, .el-button {
   border-radius: 12px !important;
 }
-.el-input__wrapper {
-  background: #f7f8fa;
-  border-radius: 12px !important;
-  transition: box-shadow 0.2s;
+.el-input {
+  --el-input-hover-border-color: #a8edea;
+  --el-input-focus-border-color: #409EFF;
+  --el-input-border-radius: 12px;
+  --el-input-bg-color: #ececec;
+  --el-input-border-color: #f0f2f5;
+  --el-input-hover-bg-color: #ffffff;
+  --el-input-focus-bg-color: #ffffff;
+  --el-input-text-color: #334155;
+  --el-input-placeholder-color: #94a3b8;
+  --el-input-icon-color: #64748b;
+  --el-input-clear-hover-color: #409EFF;
+  --el-input-padding-horizontal: 16px;
+  margin: 4px 0;
 }
-.el-input__wrapper:focus-within {
-  box-shadow: 0 0 0 2px #fed6e3;
+
+.el-input :deep(.el-input__wrapper) {
+  padding: 8px 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s ease;
+}
+
+.el-input :deep(.el-input__wrapper:hover) {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+  border-color: #a8edea;
+}
+
+.el-input :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+  border-color: #409EFF;
+  transform: translateY(-1px);
+}
+
+.el-input :deep(.el-input__inner) {
+  height: 42px;
+  font-size: 15px;
+  letter-spacing: 0.3px;
+}
+
+.el-input :deep(.el-input__prefix) {
+  font-size: 18px;
+  margin-right: 8px;
+  color: #94a3b8;
+  transition: color 0.3s ease;
+}
+
+.el-input :deep(.el-input__wrapper.is-focus .el-input__prefix) {
+  color: #409EFF;
+}
+
+.el-input :deep(.el-input__suffix) {
+  font-size: 18px;
+  color: #94a3b8;
+  transition: color 0.3s ease;
+}
+
+.el-input :deep(.el-input__wrapper.is-focus .el-input__suffix) {
+  color: #409EFF;
+}
+
+.el-input :deep(.el-input__clear) {
+  font-size: 16px;
+  color: #94a3b8;
+  transition: all 0.3s ease;
+}
+
+.el-input :deep(.el-input__clear:hover) {
+  color: #409EFF;
+  transform: scale(1.1);
+}
+
+/* 验证码输入框特殊样式 */
+.valid-code {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.valid-code .el-input {
+  flex: 1;
+}
+
+.valid-code :deep(.el-input__wrapper) {
+  height: 42px;
+}
+
+/* 密码输入框特殊样式 */
+.el-input[type="password"] :deep(.el-input__wrapper) {
+  padding-right: 40px;
+}
+
+/* 输入框聚焦时的动画效果 */
+@keyframes inputFocus {
+  0% { transform: translateY(0); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02); }
+  50% { transform: translateY(-2px); box-shadow: 0 0 0 3px rgba(64, 158, 255, 0.2); }
+  100% { transform: translateY(-1px); box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2); }
+}
+
+.el-input :deep(.el-input__wrapper.is-focus) {
+  animation: inputFocus 0.3s ease;
+}
+
+/* 响应式调整 */
+@media (max-width: 500px) {
+  .el-input {
+    --el-input-padding-horizontal: 12px;
+  }
+
+  .el-input :deep(.el-input__inner) {
+    height: 38px;
+    font-size: 14px;
+  }
+
+  .el-input :deep(.el-input__prefix) {
+    font-size: 16px;
+  }
 }
 .el-button {
   background: #a8edea;
@@ -190,13 +313,6 @@ const login = async () => {
   display: flex;
   align-items: center;
 }
-@media (max-width: 500px) {
-  .login-page {
-    width: 95vw;
-    padding: 20px 5vw 10px;
-    margin: 0;
-  }
-}
 .link-button {
   color: #409EFF;
   text-decoration: none;
@@ -209,5 +325,54 @@ const login = async () => {
 .link-button:hover {
   color: #66b1ff;
   text-decoration: underline;
+}
+.role-selector {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.role-title {
+  font-size: 14px;
+  color: #606266;
+  margin-bottom: 12px;
+}
+
+.role-group {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.role-group :deep(.el-radio-button__inner) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  border-radius: 20px !important;
+  transition: all 0.3s ease;
+}
+
+.role-group :deep(.el-radio-button__inner:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.role-group :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+  background-color: #409EFF;
+  border-color: #409EFF;
+  box-shadow: 0 2px 12px rgba(64, 158, 255, 0.2);
+}
+
+.role-group :deep(.el-radio-button__inner .el-icon) {
+  font-size: 16px;
+  margin-right: 4px;
+}
+
+.role-group :deep(.el-radio-button:first-child .el-radio-button__inner) {
+  border-radius: 20px !important;
+}
+
+.role-group :deep(.el-radio-button:last-child .el-radio-button__inner) {
+  border-radius: 20px !important;
 }
 </style>

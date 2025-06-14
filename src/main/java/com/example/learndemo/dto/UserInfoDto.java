@@ -8,5 +8,6 @@ public class UserInfoDto {
     private String userName;
     private String nickName;
     private String role;
+    private String phone;
 
 }

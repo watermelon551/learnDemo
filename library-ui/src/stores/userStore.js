@@ -1,24 +1,64 @@
 import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import { userInfoAPI } from '@/api/user.js';
 
+// 使用 setup 语法定义 store
 export const useUserStore = defineStore('user', () => {
-  // 1. 定义管理用户数据的state
+  // state
   const userInfo = ref({});
-  // 2. 定义获取接口数据的action函数
-  const getUserInfo = async () => {
-    const token = localStorage.getItem("token")
-    const res = await userInfoAPI(token);
-    userInfo.value = res.data.data;
-  };
 
-  // 退出时清除用户信息
-  const clearUserInfo = () => {
+  // getters
+  const isAdmin = computed(() => {
+    return userInfo.value?.role === 'ADMIN';
+  });
+
+  const isUser = computed(() => {
+    return userInfo.value?.role === 'USER';
+  });
+
+  // actions
+  async function getUserInfo() {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error('No token found');
+      }
+    const res = await userInfoAPI(token);
+      if (res.data.code === 200) {
+    userInfo.value = res.data.data;
+        // 根据角色设置路由权限
+        if (userInfo.value.role === 'ADMIN') {
+          localStorage.setItem('userRole', 'ADMIN');
+        } else {
+          localStorage.setItem('userRole', 'USER');
+        }
+      } else {
+        throw new Error(res.data.message || '获取用户信息失败');
+      }
+    } catch (error) {
+      console.error('获取用户信息失败:', error);
+      throw error;
+    }
+  }
+
+  function clearUserInfo() {
     localStorage.removeItem('token');
+    localStorage.removeItem('userRole');
     userInfo.value = {};
-  };
-  // 3. 以对象的格式把state和action return
+  }
+
+  // 返回 state、getters 和 actions
   return {
-    userInfo, getUserInfo, clearUserInfo,
+    userInfo,
+    isAdmin,
+    isUser,
+    getUserInfo,
+    clearUserInfo
   };
 }, {
-  persist: true,
+  persist: {
+    key: 'user-store',
+    storage: localStorage,
+    paths: ['userInfo']
+  }
 });
