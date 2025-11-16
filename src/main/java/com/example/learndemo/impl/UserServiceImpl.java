@@ -6,8 +6,10 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.example.learndemo.common.LibraryException;
 import com.example.learndemo.domain.User;
+import com.example.learndemo.domain.Members;
 import com.example.learndemo.dto.*;
 import com.example.learndemo.mapper.UserMapper;
+import com.example.learndemo.mapper.MembersMapper;
 import com.example.learndemo.service.UserService;
 import com.example.learndemo.util.JwtUtil;
 import jakarta.annotation.Resource;
@@ -18,18 +20,26 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static net.sf.jsqlparser.util.validation.metadata.NamedObject.user;
+
+import com.example.learndemo.service.FinService;
 
 @Service
 public class UserServiceImpl implements UserService {
     @Resource
     private UserMapper userMapper;
 
+    @Autowired
+    private MembersMapper membersMapper;
 
     @Resource
     private PasswordEncoder passwordEncoder;
@@ -40,7 +50,8 @@ public class UserServiceImpl implements UserService {
     @Resource
     private JwtUtil jwtUtil;
 
-
+    @Autowired
+    private FinService finService;
 
     @Override
     public void register(RegisterDto registerDto) {
@@ -55,7 +66,6 @@ public class UserServiceImpl implements UserService {
         user.setPhone(registerDto.getPhone());
         user.setNickName(registerDto.getNickName());
         userMapper.insert(user);
-
     }
 
     @Override
@@ -106,7 +116,6 @@ public class UserServiceImpl implements UserService {
         return null;
         }
         return toUserInfoDto(user);
-
     }
 
     @Override
@@ -156,7 +165,6 @@ public class UserServiceImpl implements UserService {
     @Override
     public void batchDelete(List<Long> ids) {
         userMapper.deleteBatchIds(ids);
-
     }
 
     private UserInfoDto toUserInfoDto(User user) {
@@ -167,5 +175,78 @@ public class UserServiceImpl implements UserService {
         userInfoDto.setRole(user.getRole());
         userInfoDto.setPhone(user.getPhone());
         return userInfoDto;
+    }
+
+    @Override
+    public List<Members> getAllMembers() {
+        return membersMapper.selectList(null);
+    }
+
+    @Override
+    public void updateMember(Members member) {
+        membersMapper.updateById(member);
+    }
+
+    @Override
+    public void rechargeMember(Integer memberId, Double amount) {
+        Members member = membersMapper.selectById(memberId);
+        if (member != null) {
+            // 充值逻辑，假设押金字段为 deposit
+            java.math.BigDecimal deposit = member.getDeposit() == null ? java.math.BigDecimal.ZERO : member.getDeposit();
+            member.setDeposit(deposit.add(java.math.BigDecimal.valueOf(amount)));
+            membersMapper.updateById(member);
+        }
+    }
+
+    @Override
+    public void freezeMember(Integer memberId) {
+        Members member = membersMapper.selectById(memberId);
+        if (member != null) {
+            // 删除 member.setStatus("冻结")
+        }
+    }
+
+    @Override
+    @Transactional
+    public void registerMember(RegisterMemberDto dto) {
+        // 获取当前登录用户
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userMapper.findOneByUsername(username);
+        if (user == null) {
+            throw new LibraryException(400, "用户不存在");
+        }
+
+        // 检查是否已经是会员
+        LambdaQueryWrapper<Members> wrapper = Wrappers.lambdaQuery();
+        wrapper.eq(Members::getUserId, user.getId());
+        Members existingMember = membersMapper.selectOne(wrapper);
+        if (existingMember != null) {
+            throw new LibraryException(400, "该用户已经是会员");
+        }
+
+        // 计算所需预存款
+        int duration = dto.getDuration();
+        double need = duration * 10.0;
+        double balance = finService.getUserPrepaymentBalance(username);
+        if (balance < need) {
+            throw new LibraryException(400, "预存款不足，请先充值");
+        }
+        // 扣除预存款（插入负的prepayment记录）
+        finService.prepaymentOperation(username, "register_member", -need, "注册会员扣费");
+
+        // 创建新会员
+        Members member = new Members();
+        member.setUserId(user.getId().intValue());
+        member.setMaxBooks(5); // 默认可借5本
+        member.setFreeDays(30); // 默认30天免费
+        member.setDeposit(new java.math.BigDecimal("100")); // 默认押金100元
+        member.setRentPay(java.math.BigDecimal.ZERO);
+        member.setOverdueFine(java.math.BigDecimal.ZERO);
+        membersMapper.insert(member);
+    }
+
+    @Override
+    public long countAllUsers() {
+        return userMapper.selectCount(null);
     }
 }

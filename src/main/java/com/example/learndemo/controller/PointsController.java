@@ -1,11 +1,10 @@
-package com.example.learndemo.contoller;
+package com.example.learndemo.controller;
 
 import com.example.learndemo.dto.UserPointsDto;
 import com.example.learndemo.dto.PointsSummaryDto;
 import com.example.learndemo.service.PointsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @RestController
 @RequestMapping("/api/points")

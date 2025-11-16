@@ -14,4 +14,5 @@ public class BookDto {
     private int total_copies;
     private int available_copies;
     private boolean status;
+
 }

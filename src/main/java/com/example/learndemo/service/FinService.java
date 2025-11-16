@@ -9,4 +9,5 @@ public interface FinService {
     FinancialRecords fineOperation(String username, String reason, Double amount, String description);
     List<FinancialRecords> getUserRecords(String username);
     List<FinancialRecords> getRecordsByType(String type);
+    double getUserPrepaymentBalance(String username);
 }

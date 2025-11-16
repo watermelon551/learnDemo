@@ -17,7 +17,7 @@ export const searchBooks = (keyword) => {
 
 export const borrowBook = (bookId, data) => {
   return request({
-    url: `/api/books/borrow/${bookId}`,
+    url: `/api/borrow/${bookId}`,
     method: 'post',
     data
   });
@@ -25,7 +25,7 @@ export const borrowBook = (bookId, data) => {
 
 export const returnBook = (bookId, data) => {
   return request({
-    url: `/api/books/return/${bookId}`,
+    url: `/api/return/${bookId}`,
     method: 'post',
     data
   });

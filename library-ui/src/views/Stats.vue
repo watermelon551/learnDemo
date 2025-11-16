@@ -1,22 +1,28 @@
 <template>
   <div class="stats-overview">
-    <el-card class="page-header":body-style="{ display: 'none' }">
-      <template #header>
-        <div class="card-header">
-          <h2><el-icon><DataLine /></el-icon> 统计分析</h2>
-        </div>
-      </template>
-    </el-card>
+    <OverviewCards />
     <el-row :gutter="24" class="stats-row">
       <el-col :span="24">
-        <BookStats />
+        <BorrowTrend />
       </el-col>
     </el-row>
     <el-row :gutter="24" class="stats-row">
       <el-col :span="12">
-        <AuthorStats />
+        <UserTrend />
       </el-col>
       <el-col :span="12">
+        <FinanceTrend />
+      </el-col>
+    </el-row>
+    <!-- 榜单部分下移 -->
+    <el-row :gutter="24" class="stats-row">
+      <el-col :span="8">
+        <BookStats />
+      </el-col>
+      <el-col :span="8">
+        <AuthorStats />
+      </el-col>
+      <el-col :span="8">
         <GenreStats />
       </el-col>
     </el-row>
@@ -24,10 +30,13 @@
 </template>
 
 <script setup>
+import OverviewCards from '@/components/OverviewCards.vue';
+import BorrowTrend from '@/components/BorrowTrend.vue';
+import UserTrend from '@/components/UserTrend.vue';
+import FinanceTrend from '@/components/FinanceTrend.vue';
 import BookStats from '@/components/BookStats.vue';
 import AuthorStats from '@/components/AuthorStats.vue';
 import GenreStats from '@/components/GenreStats.vue';
-import { DataLine } from '@element-plus/icons-vue';
 </script>
 
 <style scoped>

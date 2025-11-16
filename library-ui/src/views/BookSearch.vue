@@ -7,11 +7,15 @@
         <div class="search-container">
           <input
               v-model="searchKeyword"
-              placeholder="输入书名关键词搜索"
+              placeholder="输入书名或作者关键词搜索"
               @keyup.enter="searchBooks"
           />
           <button @click="searchBooks" class="search-btn">
             <span class="icon">🔍</span> 搜索
+          </button>
+          <!-- 新增还书主按钮 -->
+          <button @click="openReturnDialog" class="return-main-btn">
+            <span class="icon">📚</span> 还书
           </button>
         </div>
       </div>
@@ -25,6 +29,10 @@
                 :key="book.bookId"
                 class="book-item card"
             >
+              <!-- 彩色封面 -->
+              <div class="book-cover" :style="getCoverStyle(book.category)">
+                <span class="cover-title">{{ book.title.slice(0, 5) }}</span>
+              </div>
               <h3 class="title">{{ book.title }}</h3>
               <div class="details">
                 <p>作者：{{ book.author }}</p>
@@ -47,13 +55,6 @@
                 >
                   借书
                 </button>
-                <button
-                    class="return-btn"
-                    @click="openReturnDialog(book.bookId)"
-                    :disabled="book.availableCopies >= book.totalCopies"
-                >
-                  还书
-                </button>
               </div>
             </div>
           </transition-group>
@@ -69,8 +70,10 @@
         @close="showBorrowDialog = false"
         @borrow-success="searchBooks"
     />
+    <!-- 新还书弹窗 -->
     <ReturnDialog
         v-if="showReturnDialog"
+        :borrow-list="myBorrowList"
         @close="showReturnDialog = false"
         @return-success="handleReturnSuccess"
     />
@@ -78,9 +81,23 @@
 </template>
 
 <script>
-import axios from 'axios';
-import BorrowDialog from '@/components/BorrowDialog.vue';
-import ReturnDialog from '@/components/ReturnDialog.vue';
+import BorrowDialog from '../components/BorrowDialog.vue';
+import ReturnDialog from '../components/ReturnDialog.vue';
+import request from '@/utils/request.js';
+
+// 分类颜色映射
+const categoryColors = {
+  '文学': '#409EFF',
+  '历史': '#67C23A',
+  '心理学': '#E6A23C',
+  '科幻': '#F56C6C',
+  '哲学': '#909399',
+  '计算机': '#1abc9c',
+  '经济': '#e67e22',
+  '艺术': '#8e44ad',
+  '教育': '#2d8cf0',
+  '其他': '#606266'
+};
 
 export default {
   components: {
@@ -94,7 +111,8 @@ export default {
       showBorrowDialog: false,
       showReturnDialog: false,
       currentBookId: null,
-      currentBookTitle: ''
+      currentBookTitle: '',
+      myBorrowList: [] // 新增：我的借阅列表
     };
   },
   mounted() {
@@ -107,7 +125,8 @@ export default {
     },
     async fetchAllBooks() {
       try {
-        const response = await axios.get('http://localhost:8080/api/books');
+        // 获取所有书籍（包括可借为0的）
+        const response = await request.get('/api/books?showAll=1');
         this.books = response.data;
       } catch (error) {
         alert('获取数据失败: ' + error.message);
@@ -119,9 +138,8 @@ export default {
         return;
       }
       try {
-        const response = await axios.get(
-            `http://localhost:8080/api/books/search?keyword=${this.searchKeyword}`
-        );
+        // 支持书名和作者搜索
+        const response = await request.get('/api/books/search', { params: { keyword: this.searchKeyword } });
         this.books = response.data;
       } catch (error) {
         alert('搜索失败: ' + error.message);
@@ -132,9 +150,28 @@ export default {
       this.currentBookTitle = bookTitle;
       this.showBorrowDialog = true;
     },
-    openReturnDialog(bookId) {
-      this.currentBookId = bookId;
+    // 新增：打开还书弹窗并加载我的借阅
+    async openReturnDialog() {
+      try {
+        const res = await request.get('/api/borrow/my');
+        this.myBorrowList = res.data;
       this.showReturnDialog = true;
+      } catch (e) {
+        alert('获取借阅记录失败');
+      }
+    },
+    getCoverStyle(category) {
+      const color = categoryColors[category] || categoryColors['其他'];
+      return {
+        background: color,
+        borderRadius: '12px',
+        height: '80px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: '1.2rem',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+      };
     }
   }
 };
@@ -399,6 +436,46 @@ button:disabled {
   .card.book-item {
     padding: 1rem;
   }
+}
+
+.book-cover {
+  width: 100%;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+  border-radius: 12px;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #fff;
+  letter-spacing: 2px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.cover-title {
+  display: block;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.return-main-btn {
+  background: linear-gradient(135deg, #67c23a 0%, #409eff 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-left: 1rem;
+  cursor: pointer;
+  transition: background 0.3s, box-shadow 0.3s;
+  box-shadow: 0 2px 8px rgba(103, 194, 58, 0.10);
+}
+.return-main-btn:hover {
+  background: linear-gradient(135deg, #409eff 0%, #67c23a 100%);
 }
 </style>
 

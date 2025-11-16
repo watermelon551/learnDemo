@@ -21,16 +21,6 @@
       </div>
 
       <form @submit.prevent="submitForm">
-        <div class="form-group">
-          <label>用户名</label>
-          <input v-model="form.username" required>
-        </div>
-
-        <div class="form-group">
-          <label>密码</label>
-          <input v-model="form.password" type="password" required>
-        </div>
-
         <div v-if="activeTab === 'borrow'" class="form-group">
           <label>借阅天数</label>
           <select v-model="form.days">
@@ -45,11 +35,6 @@
           <input type="date" v-model="form.reserveDate" required>
         </div>
 
-        <div class="form-group">
-          <label>联系方式</label>
-          <input v-model="form.contact" required>
-        </div>
-
         <button type="submit" class="submit-btn">
           {{ activeTab === 'borrow' ? '确认借书' : '确认预约' }}
         </button>
@@ -59,6 +44,8 @@
 </template>
 
 <script>
+import { useUserStore } from '@/stores/userStore';
+
 export default {
   props: {
     bookId: Number,
@@ -68,11 +55,8 @@ export default {
     return {
       activeTab: 'borrow',
       form: {
-        username: '',
-        password: '',
         days: '30',
         reserveDate: '',
-        contact: ''
       }
     };
   },
@@ -81,75 +65,28 @@ export default {
       this.$emit('close');
     },
     submitForm() {
-      const request = {
-        username: this.form.username,
-        password: this.form.password,
-        bookId: this.bookId,
-        type: this.activeTab === 'borrow' ? '借书' : '预约'
-      };
-
-      fetch('http://localhost:8080/api/books/borrow', {
+      const token = localStorage.getItem('token');
+      fetch(`http://localhost:8080/api/borrow/${this.bookId}`, {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(request)
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
       })
-          .then(res => {
-            // 克隆响应以便多次使用
-            const responseClone = res.clone();
-
-            // 状态码检查（如果状态不是成功）
-            if (!res.ok) {
-              return res.text().then(text => {
-                throw new Error(text);
-              });
-            }
-
-            // 尝试解析为 JSON
-            return res.json()
-                .then(data => {
-                  // 成功JSON解析的处理逻辑
-                  if (this.activeTab === 'borrow' && data.record) {
-                    const record = data.record;
-                    const receipt = `
-            ===== 借书凭证 =====
-            凭证ID: ${record.id}
-            用户ID: ${record.userId}
-            图书ID: ${record.bookId}
-            借书时间: ${record.borrowDate}
-            最晚归还时间: ${record.dueDate}
-            凭证生成时间: ${record.createdAt}
-            ===================
-          `;
-                    alert(receipt);
-                  } else {
-                    // 预约操作只显示简单消息
-                    alert(data.message);
-                  }
-
-                  this.$emit('borrow-success');
-                  this.closeDialog();
-                })
-                .catch(jsonError => {
-                  // 如果JSON解析失败，使用克隆的响应读取文本
-                  return responseClone.text().then(text => {
-                    // 显示原始响应文本
-                    alert(`操作成功：${text}`);
-                    this.$emit('borrow-success');
-                    this.closeDialog();
-                  });
-                });
-          })
-          .catch(err => {
-            // 处理错误
-            let errorMessage = err.message;
-
-            // 修正错误消息以符合要求
-            if (errorMessage.includes("用户认证失败")) {
-              errorMessage = "当前用户名与数据库不匹配，请求失败！";
-            }
-
-            alert(`操作失败：${errorMessage}`);
-          });
+        .then(res => {
+          if (!res.ok) {
+            return res.text().then(text => { throw new Error(text); });
+          }
+          return res.text();
+        })
+        .then(msg => {
+          alert(msg);
+          this.closeDialog();
+          this.$emit('borrow-success');
+        })
+        .catch(err => {
+          alert('借书失败: ' + err.message);
+        });
     }
   }
 };

@@ -18,4 +18,15 @@
         id,username,type,amount,operation,description,
         create_time
     </sql>
+
+    <!-- 按日统计押金/租金/罚款收入 -->
+    <select id="selectFinanceTrend" resultType="map">
+        SELECT DATE_FORMAT(create_time, '%Y-%m-%d') AS day,
+            SUM(CASE WHEN type = 'deposit' THEN amount ELSE 0 END) AS deposit,
+            SUM(CASE WHEN type = 'rent' THEN amount ELSE 0 END) AS rent,
+            SUM(CASE WHEN type = 'fine' THEN amount ELSE 0 END) AS fine
+        FROM financial_records
+        GROUP BY day
+        ORDER BY day ASC
+    </select>
 </mapper>

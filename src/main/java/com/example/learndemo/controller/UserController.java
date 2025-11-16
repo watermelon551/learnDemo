@@ -1,9 +1,11 @@
-package com.example.learndemo.contoller;
+package com.example.learndemo.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.learndemo.common.PlainResult;
 import com.example.learndemo.dto.UserInfoDto;
+import com.example.learndemo.dto.RegisterMemberDto;
 import com.example.learndemo.service.UserService;
+import com.example.learndemo.domain.Members;
 import jakarta.annotation.Resource;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -53,6 +55,36 @@ public class UserController {
         return PlainResult.success("success");
     }
 
+    @GetMapping("/members")
+    public PlainResult<List<Members>> getAllMembers() {
+        return PlainResult.success(userService.getAllMembers());
+    }
 
+    @PutMapping("/members/{id}")
+    public PlainResult<String> updateMember(@PathVariable Integer id, @RequestBody Members member) {
+        member.setMemberId(id);
+        userService.updateMember(member);
+        return PlainResult.success("success");
+    }
+
+    @PostMapping("/members/{id}/recharge")
+    public PlainResult<String> rechargeMember(@PathVariable Integer id, @RequestParam Double amount) {
+        userService.rechargeMember(id, amount);
+        return PlainResult.success("success");
+    }
+
+    @PostMapping("/members/{id}/freeze")
+    public PlainResult<String> freezeMember(@PathVariable Integer id) {
+        userService.freezeMember(id);
+        return PlainResult.success("success");
+    }
+
+
+
+    @PostMapping("/members")
+    public PlainResult<String> registerMember(@RequestBody RegisterMemberDto dto) {
+        userService.registerMember(dto);
+        return PlainResult.success("注册成功");
+    }
 
 }

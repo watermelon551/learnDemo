@@ -26,4 +26,12 @@
         where
         username = #{username,jdbcType=VARCHAR}
     </select>
+
+    <!-- 按日统计新用户 -->
+    <select id="selectUserTrend" resultType="map">
+        SELECT DATE_FORMAT(created_at, '%Y-%m-%d') AS day, COUNT(*) AS count
+        FROM user
+        GROUP BY day
+        ORDER BY day ASC
+    </select>
 </mapper>

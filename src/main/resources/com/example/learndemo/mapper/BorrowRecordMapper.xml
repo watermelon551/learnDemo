@@ -74,4 +74,38 @@
       LIMIT 10
     </select>
 
+    <!-- 统计某用户借阅总数 -->
+    <select id="countBorrowedBooks" resultType="int">
+        SELECT COUNT(*) FROM borrow_record
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 统计某用户按时归还的书籍数（归还日期<=应还日期） -->
+    <select id="countReturnedOnTime" resultType="int">
+        SELECT COUNT(*) FROM borrow_record
+        WHERE user_id = #{userId}
+          AND status = 'RETURNED'
+          AND return_date IS NOT NULL
+          AND due_date IS NOT NULL
+          AND return_date &lt;= due_date
+    </select>
+
+    <!-- 统计某用户逾期未还的书籍数（归还日期>应还日期） -->
+    <select id="countOverdueBooks" resultType="int">
+        SELECT COUNT(*) FROM borrow_record
+        WHERE user_id = #{userId}
+          AND status = 'RETURNED'
+          AND return_date IS NOT NULL
+          AND due_date IS NOT NULL
+          AND return_date &gt; due_date
+    </select>
+
+    <!-- 按日统计借阅量 -->
+    <select id="selectBorrowTrend" resultType="map">
+        SELECT DATE_FORMAT(borrow_date, '%Y-%m-%d') AS day, COUNT(*) AS count
+        FROM borrow_record
+        GROUP BY day
+        ORDER BY day ASC
+    </select>
+
 </mapper>

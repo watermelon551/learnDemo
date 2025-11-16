@@ -13,6 +13,15 @@ import java.time.LocalDateTime;
  */
 @TableName(value ="borrow_record")
 public class BorrowRecord {
+
+    public enum BorrowType {
+        借书, 预约, 续借
+    }
+
+    public enum BorrowStatus {
+        ACTIVE, RETURNED, EXPIRED
+    }
+
     /**
      * 
      */
@@ -47,12 +56,12 @@ public class BorrowRecord {
     /**
      * 
      */
-    private Object type;
+    private BorrowType type;
 
     /**
      * 
      */
-    private Object status;
+    private BorrowStatus status;
 
     /**
      * 
@@ -151,28 +160,28 @@ public class BorrowRecord {
     /**
      * 
      */
-    public Object getType() {
+    public  BorrowType getType() {
         return type;
     }
 
     /**
      * 
      */
-    public void setType(Object type) {
+    public void setType(BorrowType type) {
         this.type = type;
     }
 
     /**
      * 
      */
-    public Object getStatus() {
+    public BorrowStatus getStatus() {
         return status;
     }
 
     /**
      * 
      */
-    public void setStatus(Object status) {
+    public void setStatus(BorrowStatus status) {
         this.status = status;
     }
 

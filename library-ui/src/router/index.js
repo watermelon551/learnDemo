@@ -45,14 +45,44 @@ const router = createRouter({
           meta: { requiresAdmin: true }
         },
         {
+          path: 'hot',
+          name: 'Hot',
+          component: () => import('@/views/Hot.vue')
+        },
+        {
           path: 'stats',
           name: 'Stats',
-          component: () => import('@/views/Stats.vue')
+          component: () => import('@/views/Stats.vue'),
+          meta: { requiresAdmin: true }
         },
         {
           path: 'points',
           name: 'Points',
           component: () => import('@/views/Points.vue')
+        },
+        {
+          path: 'lendrecord',
+          name: 'LendRecord',
+          component: () => import('@/views/LendRecord.vue'),
+          meta: { requiresAdmin: true }
+        },
+        {
+          path: 'member-manage',
+          name: 'MemberManage',
+          component: () => import('@/views/MemberManage.vue'),
+          meta: { requiresAdmin: true }
+        },
+        {
+          path: 'register-member',
+          name: 'RegisterMember',
+          component: () => import('@/views/RegisterMember.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: 'member-center',
+          name: 'MemberCenter',
+          component: () => import('@/views/MemberCenter.vue'),
+          meta: { requiresAuth: true, title: '会员中心' }
         }
       ],
       meta: { requiresAuth: true }

@@ -116,7 +116,7 @@
         class="dialog-form"
       >
         <el-form-item label="用户名" prop="userName">
-          <el-input v-model="form.userName" placeholder="请输入用户名" />
+          <el-input v-model="form.userName" placeholder="请输入用户名" readonly />
           </el-form-item>
         <el-form-item label="昵称" prop="nickName">
           <el-input v-model="form.nickName" placeholder="请输入昵称" />
@@ -269,7 +269,7 @@ const handleSubmit = async () => {
   await formRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        const res = await updateUserAPI(form.id, form)
+        const res = await updateUserAPI(form)
         if (res.data.code === 200) {
           ElMessage.success('保存成功')
           dialogVisible.value = false

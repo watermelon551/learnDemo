@@ -41,7 +41,7 @@ public class Book {
     /**
      * 出版年份
      */
-    private Object publishYear;
+    private Integer publishYear;
 
     /**
      * 国际标准书号
@@ -61,7 +61,8 @@ public class Book {
     /**
      * 书籍状态
      */
-    private Object status;
+    @TableField(value = "status")
+    private String status;
 
     /**
      * 
@@ -146,14 +147,14 @@ public class Book {
     /**
      * 出版年份
      */
-    public Object getPublishYear() {
+    public Integer getPublishYear() {
         return publishYear;
     }
 
     /**
      * 出版年份
      */
-    public void setPublishYear(Object publishYear) {
+    public void setPublishYear(Integer publishYear) {
         this.publishYear = publishYear;
     }
 
@@ -197,19 +198,25 @@ public class Book {
      */
     public void setAvailableCopies(Integer availableCopies) {
         this.availableCopies = availableCopies;
+        if (availableCopies != null && availableCopies == 0) {
+            this.status = "已借出";
+        }
+        if (availableCopies != null && availableCopies > 0) {
+            this.status = "在馆";
+        }
     }
 
     /**
      * 书籍状态
      */
-    public Object getStatus() {
+    public String getStatus() {
         return status;
     }
 
     /**
      * 书籍状态
      */
-    public void setStatus(Object status) {
+    public void setStatus(String status) {
         this.status = status;
     }
 
