@@ -378,7 +378,7 @@ export default {
           ? await getRecordsByUser(this.queryUsername)
           : await getRecordsByType(this.queryRecordType);
 
-        this.records = response.data;
+        this.records = response.data.data;
       } catch (error) {
         this.handleError(error, '查询记录失败');
       } finally {
@@ -447,7 +447,8 @@ export default {
     formatOperation(operation) {
       const operations = {
         charge: '收取',
-        refund: '退还'
+        refund: '退还',
+        register_member: '会员扣费'
       };
       return operations[operation] || operation;
     },
@@ -472,7 +473,8 @@ export default {
     getOperationTagType(operation) {
       const types = {
         charge: 'success',
-        refund: 'info'
+        refund: 'info',
+        register_member: 'success'
       };
       return types[operation] || 'info';
     },

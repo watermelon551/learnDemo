@@ -4,6 +4,7 @@
       <button class="close-btn" @click="closeDialog">×</button>
       <h2>编辑图书信息</h2>
       <form @submit.prevent="submitForm">
+        <input type="hidden" v-model="form.bookId" />
         <div class="form-group">
           <label>书名<span class="required">*</span></label>
           <input v-model="form.title" required>
@@ -70,9 +71,25 @@ export default {
     book: Object
   },
   data() {
+    if (!this.book.bookId || isNaN(Number(this.book.bookId))) {
+      alert('bookId 丢失，无法编辑！');
+      this.$emit('close');
+    }
     return {
-      form: { ...this.book }
+      form: { ...this.book, bookId: Number(this.book.bookId) }
     };
+  },
+  watch: {
+    book: {
+      handler(newVal) {
+        if (!newVal.bookId || isNaN(Number(newVal.bookId))) {
+          alert('bookId 丢失，无法编辑！');
+          this.$emit('close');
+        }
+        this.form = { ...newVal, bookId: Number(newVal.bookId) };
+      },
+      deep: true
+    }
   },
   methods: {
     closeDialog() {
@@ -80,6 +97,12 @@ export default {
     },
 
     submitForm() {
+      // 校验 bookId
+      if (!this.form.bookId || isNaN(this.form.bookId)) {
+        alert('bookId 丢失，无法提交！');
+        return;
+      }
+
       // 验证数据
       if (parseInt(this.form.availableCopies) > parseInt(this.form.totalCopies)) {
         alert('可用副本数不能超过总副本数');
@@ -88,14 +111,14 @@ export default {
 
       // 确保状态与可用副本一致
       if (this.form.availableCopies > 0 && this.form.status === '已借出') {
-        if (!confirm('可用副本大于0但状态设为"已借出"，是否继续？')) return;
+        this.form.status = '在馆';
       }
 
       if (this.form.availableCopies === 0 && this.form.status === '在馆') {
         this.form.status = '已借出';
       }
 
-      this.$emit('submit', this.form);
+      this.$emit('submit', { ...this.form });
     },
 
     updateAvailableCopies() {

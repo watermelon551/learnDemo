@@ -5,7 +5,7 @@
       <!-- 标题和操作栏 -->
       <div class="admin-header">
         <h2>智慧图书交互终端 - 管理员界面</h2>
-        <button class="logout-btn" @click="logout">退出</button>
+
       </div>
 
       <!-- 搜索框和添加按钮 -->
@@ -77,9 +77,9 @@
 </template>
 
 <script>
-import axios from 'axios';
-import EditBookDialog from './EditBookDialog.vue';
-import AddBookDialog from '@/components/AddBookDialog.vue';
+import EditBookDialog from '../components/EditBookDialog.vue';
+import AddBookDialog from '../components/AddBookDialog.vue';
+import request from '@/utils/request.js';
 
 export default {
   name: 'AdminBookView',
@@ -102,7 +102,7 @@ export default {
   methods: {
     async fetchAllBooks() {
       try {
-        const response = await axios.get('http://localhost:8080/api/books');
+        const response = await request.get('/api/books/all');
         this.books = response.data;
       } catch (error) {
         alert('获取数据失败: ' + error.message);
@@ -116,9 +116,7 @@ export default {
       }
 
       try {
-        const response = await axios.get(
-            `http://localhost:8080/api/books/search?keyword=${this.searchKeyword}`
-        );
+        const response = await request.get('/api/books/search', { params: { keyword: this.searchKeyword } });
         this.books = response.data;
       } catch (error) {
         alert('搜索失败: ' + error.message);
@@ -126,7 +124,11 @@ export default {
     },
 
     openEditDialog(book) {
-      this.currentBook = { ...book };
+      if (!book.bookId || isNaN(Number(book.bookId))) {
+        alert('bookId 丢失，无法编辑！');
+        return;
+      }
+      this.currentBook = { ...book, bookId: Number(book.bookId) };
       this.showEditDialog = true;
     },
 
@@ -138,21 +140,25 @@ export default {
       if (!confirm('确定要删除这本图书吗？此操作不可撤销！')) return;
 
       try {
-        await axios.delete(`http://localhost:8080/api/books/${bookId}`, {
-          data: "2", // 管理员密码
-          headers: { 'Content-Type': 'text/plain' }
-        });
+        const res = await request.delete(`/api/books/${bookId}`);
+        if (res.data && res.data.code === 200) {
         this.fetchAllBooks();
         alert('删除成功');
+        } else {
+          alert(res.data.message || '删除失败');
+        }
       } catch (error) {
-        alert('删除失败: ' + (error.response?.data || '服务器错误'));
+        alert('删除失败: ' + (error.response?.data?.message || error.message || '服务器错误'));
       }
     },
 
     async handleEditSubmit(updatedBook) {
+      if (!updatedBook.bookId || isNaN(Number(updatedBook.bookId))) {
+        return;
+      }
       try {
-        await axios.put(
-            `http://localhost:8080/api/books/${updatedBook.bookId}`,
+        const res = await request.put(
+          `/api/books/${updatedBook.bookId}`,
             updatedBook,
             {
               headers: {
@@ -161,18 +167,22 @@ export default {
               }
             }
         );
+        if (res.data && res.data.code === 200) {
         this.showEditDialog = false;
         this.fetchAllBooks();
-        alert('更新成功');
+          alert(res.data.message || '更新成功');
+        } else {
+          alert(res.data.message || '更新失败');
+        }
       } catch (error) {
-        alert('更新失败: ' + (error.response?.data || '服务器错误'));
+        alert('更新失败: ' + (error.response?.data?.message || error.message || '服务器错误'));
       }
     },
 
     async handleAddSubmit(newBook) {
       try {
-        await axios.post(
-            'http://localhost:8080/api/books/add',
+        const res = await request.post(
+            '/api/books/add',
             newBook,
             {
               headers: {
@@ -181,11 +191,15 @@ export default {
               }
             }
         );
-        this.showAddDialog = false;
-        this.fetchAllBooks();
-        alert('添加成功');
+        if (res.data && res.data.code === 200) {
+          this.showAddDialog = false;
+          this.fetchAllBooks();
+          alert(res.data.message || '添加成功');
+        } else {
+          // 静默处理，不弹窗
+        }
       } catch (error) {
-        alert('添加失败: ' + (error.response?.data || '服务器错误'));
+        // 静默处理，不弹窗
       }
     },
 

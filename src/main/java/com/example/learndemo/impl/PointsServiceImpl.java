@@ -8,11 +8,18 @@ import com.example.learndemo.service.PointsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.example.learndemo.mapper.BorrowRecordMapper;
+import com.example.learndemo.mapper.UserMapper;
+import com.example.learndemo.domain.User;
 
 @Service
 public class PointsServiceImpl implements PointsService {
     @Autowired
     private UserPointsMapper userPointsMapper;
+    @Autowired
+    private BorrowRecordMapper borrowRecordMapper;
+    @Autowired
+    private UserMapper userMapper;
 
     @Override
     public UserPointsDto getUserPoints(String username) {
@@ -27,21 +34,46 @@ public class PointsServiceImpl implements PointsService {
 
     @Override
     public PointsSummaryDto calculatePointsSummary(String username) {
-        UserPoints up = userPointsMapper.selectOne(new QueryWrapper<UserPoints>().eq("username", username));
-        if (up == null) return null;
+        User user = userMapper.findOneByUsername(username);
+        if (user == null) return null;
+        Integer userId = user.getId().intValue();
+        int borrowedBooks = borrowRecordMapper.countBorrowedBooks(userId);
+        int returnedOnTime = borrowRecordMapper.countReturnedOnTime(userId);
+        int overdueBooks = borrowRecordMapper.countOverdueBooks(userId);
+        int totalPoints = borrowedBooks + returnedOnTime * 2 - overdueBooks;
+        if (totalPoints < 0) totalPoints = 0;
         PointsSummaryDto dto = new PointsSummaryDto();
         dto.setUserId(username);
-        dto.setTotalPoints(up.getPoints());
-        dto.setRank(1); // TODO: 排名逻辑
-        dto.setNextLevelPoints(up.getPoints() + 100); // TODO: 实际等级逻辑
+        dto.setTotalPoints(totalPoints);
+        dto.setRank(1); // 可扩展
+        dto.setNextLevelPoints(30 - (totalPoints % 30));
+        dto.setBorrowedBooks(borrowedBooks);
+        dto.setReturnedOnTime(returnedOnTime);
+        dto.setOverdueBooks(overdueBooks);
         return dto;
     }
 
     @Override
     public void updateUserPoints(String username) {
+        User user = userMapper.findOneByUsername(username);
+        if (user == null) return;
+        Integer userId = user.getId().intValue();
+        int borrowedBooks = borrowRecordMapper.countBorrowedBooks(userId);
+        int returnedOnTime = borrowRecordMapper.countReturnedOnTime(userId);
+        int overdueBooks = borrowRecordMapper.countOverdueBooks(userId);
+        int totalPoints = borrowedBooks + returnedOnTime * 2 - overdueBooks;
+        if (totalPoints < 0) totalPoints = 0;
+        int stars = Math.min(5, totalPoints / 30 + (totalPoints % 30 > 0 ? 1 : 0));
         UserPoints up = userPointsMapper.selectOne(new QueryWrapper<UserPoints>().eq("username", username));
-        if (up != null) {
-            up.setPoints(up.getPoints() + 10); // 示例：每次调用加10分
+        if (up == null) {
+            up = new UserPoints();
+            up.setUsername(username);
+            up.setPoints(totalPoints);
+            up.setStars(stars);
+            userPointsMapper.insert(up);
+        } else {
+            up.setPoints(totalPoints);
+            up.setStars(stars);
             userPointsMapper.updateById(up);
         }
     }

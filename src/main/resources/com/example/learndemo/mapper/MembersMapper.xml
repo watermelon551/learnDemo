@@ -15,8 +15,7 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        member_id,user_id,max_books,free_days,deposit,rent_pay,
-        overdue_fine
+        member_id,user_id,max_books,free_days,deposit,rent_pay,overdue_fine
     </sql>
     <select id="findOneByUserid" resultType="com.example.learndemo.domain.User"></select>
 </mapper>

@@ -3,6 +3,7 @@ package com.example.learndemo.mapper;
 import com.example.learndemo.domain.Book;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Param;
+import java.util.List;
 
 /**
 * @author ASUS
@@ -12,6 +13,8 @@ import org.apache.ibatis.annotations.Param;
 */
 public interface BookMapper extends BaseMapper<Book> {
 
+    List<Book> findAvailableBooks();
+    List<Book> searchBooksByTitleOrAuthor(String keyword);
 
 }
 

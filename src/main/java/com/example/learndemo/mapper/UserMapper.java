@@ -1,5 +1,6 @@
 package com.example.learndemo.mapper;
 import java.util.List;
+import java.util.Map;
 import org.apache.ibatis.annotations.Param;
 
 import com.example.learndemo.domain.User;
@@ -14,6 +15,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 public interface UserMapper extends BaseMapper<User> {
     User findOneByUsername(@Param("username") String username);
 
+    // 按月统计新用户
+    List<Map<String, Object>> selectUserTrend();
 }
 
 

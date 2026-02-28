@@ -2,74 +2,30 @@
   <div class="dialog-overlay" @click.self="closeDialog">
     <div class="dialog-content">
       <div class="dialog-header">
-        <h3>{{ activeTab === 'return' ? '还书操作' : '续借操作' }}</h3>
+        <h3>还书操作</h3>
         <button @click="closeDialog">&times;</button>
       </div>
-
-      <!-- 选项卡 -->
-      <div class="tabs">
-        <button
-            :class="{ active: activeTab === 'return' }"
-            @click="activeTab = 'return'"
-        >还书</button>
-        <button
-            :class="{ active: activeTab === 'renew' }"
-            @click="activeTab = 'renew'"
-        >续借</button>
-      </div>
-
-      <!-- 表单 -->
       <div class="form-container">
-        <div class="form-group">
-          <label>用户名</label>
-          <input
-              v-model="username"
-              type="text"
-              placeholder="输入用户名"
-          >
+        <div v-if="borrowList && borrowList.length > 0">
+          <label>请选择要归还的书籍：</label>
+          <el-table :data="borrowList" border stripe style="margin: 12px 0;" @selection-change="onSelectionChange">
+            <el-table-column type="selection" width="50" />
+            <el-table-column prop="bookTitle" label="书名" />
+            <el-table-column prop="author" label="作者" />
+            <el-table-column prop="borrowDate" label="借阅日期" />
+            <el-table-column prop="dueDate" label="应还日期" />
+          </el-table>
         </div>
-
-        <div class="form-group">
-          <label>密码</label>
-          <input
-              v-model="password"
-              type="password"
-              placeholder="输入密码"
-          >
-        </div>
-
-        <div class="form-group">
-          <label>借阅记录ID</label>
-          <input
-              v-model="recordId"
-              type="number"
-              placeholder="输入借阅记录ID"
-          >
-        </div>
-
-        <div class="form-group" v-if="activeTab === 'renew'">
-          <label>续借天数</label>
-          <select v-model="renewDays">
-            <option value="15">15天</option>
-            <option value="30">30天</option>
-            <option value="60">60天</option>
-          </select>
-        </div>
+        <div v-else class="no-borrow">暂无可归还的书籍</div>
       </div>
-
-      <!-- 操作按钮 -->
       <div class="dialog-actions">
         <button class="cancel-btn" @click="closeDialog">取消</button>
         <button
             class="confirm-btn"
-            @click.stop.prevent="handleSubmit"
-            :disabled="isSubmitting"
-        >
-          {{ activeTab === 'return' ? '确认还书' : '确认续借' }}
-        </button>
+          @click.stop.prevent="handleReturn"
+          :disabled="selected.length === 0 || isSubmitting"
+        >确认还书</button>
       </div>
-
-      <!-- 状态提示 -->
       <div v-if="statusMessage" :class="['status-message', statusType]">
         {{ statusMessage }}
       </div>
@@ -77,88 +33,51 @@
   </div>
 </template>
 
-<script>
-import axios from 'axios';
+<script setup>
+import { ref, watch, defineProps, defineEmits } from 'vue';
+import request from '@/utils/request.js';
+const props = defineProps({
+  borrowList: { type: Array, default: () => [] }
+});
+const emit = defineEmits(['close', 'return-success']);
+const selected = ref([]);
+const isSubmitting = ref(false);
+const statusMessage = ref('');
+const statusType = ref('');
 
-export default {
-  name: 'ReturnDialog',
-  data() {
-    return {
-      activeTab: 'return', // 默认选还书
-      username: '',
-      password: '',
-      recordId: null,
-      renewDays: '30',
-      isSubmitting: false,
-      hasSubmitted: false,
-      statusMessage: '',
-      statusType: '' // success/error
-    };
-  },
-  methods: {
-    closeDialog() {
-      this.$emit('close');
-    },
+watch(props.borrowList, () => { selected.value = []; });
 
-    handleSubmit() {
-      // 防止重复提交
-      if (this.isSubmitting || this.hasSubmitted) return;
-      this.submitForm();
-    },
+function closeDialog() {
+  emit('close');
+}
 
-    async submitForm() {
-      this.isSubmitting = true;
-      this.hasSubmitted = true;
-      this.statusMessage = '';
+function onSelectionChange(val) {
+  selected.value = val;
+}
 
+async function handleReturn() {
+  if (selected.value.length === 0) return;
+  isSubmitting.value = true;
+  statusMessage.value = '';
       try {
-        // 准备请求数据
-        const request = {
-          username: this.username.trim(),
-          password: this.password,
-          recordId: parseInt(this.recordId),
-          type: this.activeTab === 'return' ? '还书' : '续借'
-        };
-
-        // 发送请求
-        const response = await axios.post(
-            'http://localhost:8080/api/books/return',
-            request
-        );
-
-        // 处理成功响应
-        this.statusMessage = response.data;
-        this.statusType = 'success';
-
-        // 重置表单
-        this.username = '';
-        this.password = '';
-        this.recordId = null;
-
-        // **立即触发事件，通知父组件刷新**
-        this.$emit('return-success');
-
-        // **立即关闭弹窗**
-        this.closeDialog();
-
-      } catch (error) {
-        // 处理错误
-        let errorMessage = error.response?.data || '操作失败';
-
-        // 修正错误消息
-        if (error.response?.status === 401) {
-          errorMessage = "当前用户名与数据库不匹配，请求失败！";
-        }
-
-        this.statusMessage = errorMessage;
-        this.statusType = 'error';
+    // 支持多选归还
+    for (const item of selected.value) {
+      const recordId = item.id || item.borrowId;
+      await request.post(`/api/borrow/return/${recordId}`);
+    }
+    statusMessage.value = '还书成功';
+    statusType.value = 'success';
+    setTimeout(() => {
+      emit('return-success');
+      closeDialog();
+    }, 1000);
+  } catch (e) {
+    statusMessage.value = '还书失败';
+    statusType.value = 'error';
       } finally {
-        this.isSubmitting = false;
+    isSubmitting.value = false;
       }
     }
-
-  }
-};
 </script>
 
 <style scoped>
@@ -228,36 +147,6 @@ export default {
   cursor: pointer;
 }
 
-.tabs {
-  display: flex;
-  border-bottom: 1px solid #eee;
-}
-
-.tabs button {
-  flex: 1;
-  padding: 12px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-.tabs button.active {
-  position: relative;
-  color: #3498db;
-}
-
-.tabs button.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 3px;
-  background: #3498db;
-}
-
 .form-container {
   padding: 20px;
 }
@@ -320,5 +209,11 @@ export default {
 
 .confirm-btn:hover:not(:disabled) {
   background: #2980b9;
+}
+
+.no-borrow {
+  text-align: center;
+  color: #888;
+  padding: 2rem 0;
 }
 </style>

@@ -9,11 +9,9 @@
       text-color="#bfcbd9"
       active-text-color="#409EFF"
     >
-      <el-menu-item index="/dashboard" v-if="user.role === 'ADMIN'" class="menu-item">
-        <el-icon><DataLine /></el-icon>
-        <template #title>
+      <el-menu-item index="/stats" v-if="user.role === 'ADMIN'" class="menu-item">
+        <el-icon><PieChart /></el-icon>
         <span>数据统计</span>
-        </template>
       </el-menu-item>
 
       <el-menu-item index="/admin-books" v-if="user.role === 'ADMIN'" class="menu-item">
@@ -44,10 +42,10 @@
         </template>
       </el-menu-item>
 
-      <el-menu-item index="/bookwithuser" v-if="user.role === 'USER'" class="menu-item">
-        <el-icon><Grid /></el-icon>
+      <el-menu-item index="/register-member" v-if="user.role === 'USER'" class="menu-item">
+        <el-icon><User /></el-icon>
         <template #title>
-        <span>借阅查询</span>
+        <span>注册会员</span>
         </template>
       </el-menu-item>
 
@@ -58,10 +56,15 @@
         </template>
       </el-menu-item>
 
-      <el-menu-item index="/stats" class="menu-item">
-        <el-icon><Histogram /></el-icon>
-        <template #title>
+      <el-menu-item index="/hot" v-if="user.role === 'USER'" class="menu-item">
+        <el-icon><Star /></el-icon>
         <span>时下热门</span>
+      </el-menu-item>
+
+      <el-menu-item index="/member-manage" v-if="user.role === 'ADMIN'" class="menu-item">
+        <el-icon><User /></el-icon>
+        <template #title>
+        <span>会员管理</span>
         </template>
       </el-menu-item>
 
@@ -81,6 +84,10 @@
         <el-menu-item index="/points" class="sub-menu-item">
           <el-icon><Medal /></el-icon>
           <span>我的积分</span>
+        </el-menu-item>
+        <el-menu-item index="/member-center" class="sub-menu-item" v-if="user.role === 'USER'">
+          <el-icon><User /></el-icon>
+          <span>会员中心</span>
         </el-menu-item>
       </el-sub-menu>
     </el-menu>
@@ -102,7 +109,9 @@ import {
   Edit,
   Lock,
   Money,
-  Medal
+  Medal,
+  PieChart,
+  Star
 } from '@element-plus/icons-vue';
 
 const user = ref({});

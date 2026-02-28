@@ -14,4 +14,4 @@ import PointsSystem from '@/components/PointsSystem.vue';
   background: #f5f7fa;
   min-height: 100vh;
 }
-</style> 
+</style>

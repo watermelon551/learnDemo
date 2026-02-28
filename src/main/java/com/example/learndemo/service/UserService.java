@@ -2,6 +2,7 @@ package com.example.learndemo.service;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.example.learndemo.dto.*;
+import com.example.learndemo.domain.Members;
 
 import java.util.List;
 
@@ -21,4 +22,16 @@ public interface UserService {
     void deleteUser(Long id);
 
     void batchDelete(List<Long> ids);
+
+    List<Members> getAllMembers();
+
+    void updateMember(Members member);
+
+    void rechargeMember(Integer memberId, Double amount);
+
+    void freezeMember(Integer memberId);
+
+    void registerMember(RegisterMemberDto dto);
+
+    long countAllUsers();
 }

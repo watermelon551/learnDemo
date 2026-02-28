@@ -1,4 +1,4 @@
-package com.example.learndemo.contoller;
+package com.example.learndemo.controller;
 
 import com.example.learndemo.common.PlainResult;
 import com.example.learndemo.dto.LoginRequestDto;

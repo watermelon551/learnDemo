@@ -8,4 +8,7 @@ public class PointsSummaryDto {
     private Integer totalPoints;
     private Integer rank;
     private Integer nextLevelPoints;
+    private Integer borrowedBooks;
+    private Integer returnedOnTime;
+    private Integer overdueBooks;
 } 
